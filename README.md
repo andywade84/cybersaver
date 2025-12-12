@@ -38,3 +38,5 @@ Produces `build/cybersaver.exe`. UI and quest data are embedded.
 ## Notes
 - Profiles live under `profiles/` next to the executable. Loading a profile replaces the game save folder with a junction to that profile.
 - The UI auto-refreshes saves every few seconds; use filters/search to narrow results.
+- **Cloud saves:** Steam/GoG can drop cloud saves into the game folder on launch. To avoid surprise new folders or old saves resurfacing, disable cloud saves for Cyberpunk 2077 in your launcher.
+- **Backups:** Always keep an off-machine copy of profiles (e.g., OneDrive/Dropbox/Google Drive). Future enhancements could include optional cloud sync (OAuth to your provider) or paid hosted storage, but today you should handle cloud backups yourself.
