@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/getlantern/systray"
@@ -13,6 +14,7 @@ import (
 //go:generate rsrc -ico CyberSaver.ico -o CyberSaver.syso
 
 const shutdownTimeout = 3 * time.Second
+const defaultPort = 8787
 
 func main() {
 	autoPath, ok := detectGameSavePath()
@@ -25,6 +27,8 @@ func main() {
 	if err := os.MkdirAll(s.profilesDir, 0o755); err != nil {
 		log.Fatalf("failed to create profiles dir: %v", err)
 	}
+
+	cfg := requirePort(loadConfig())
 
 	ensureProtection(s)
 
@@ -43,7 +47,7 @@ func main() {
 	mux.HandleFunc("/api/delete_save", s.handleDeleteSave)
 	mux.HandleFunc("/api/select_path", s.handleSelectPath)
 
-	addr := "localhost:8787"
+	addr := "localhost:" + strconv.Itoa(configPort(cfg))
 	url := "http://" + addr
 	httpServer := &http.Server{Addr: addr, Handler: mux}
 
