@@ -73,6 +73,15 @@ func main() {
 				}
 			}
 		}()
+		go monitorGameState(func(running bool) {
+			if running {
+				systray.SetIcon(iconBytesDanger())
+				systray.SetTooltip("Cyberpunk running - switches blocked")
+			} else {
+				systray.SetIcon(iconBytes())
+				systray.SetTooltip("Cyberpunk 2077 Save Profiles")
+			}
+		})
 	}, func() {
 		shutdownServer(httpServer)
 	})

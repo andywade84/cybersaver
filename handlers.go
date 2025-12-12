@@ -143,6 +143,10 @@ func (s *server) handleLoadProfile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "game save path not set", http.StatusBadRequest)
 		return
 	}
+	if gameRunning.Load() {
+		http.Error(w, "cannot switch while Cyberpunk is running", http.StatusConflict)
+		return
+	}
 	var body struct {
 		Name string `json:"name"`
 	}
@@ -174,6 +178,10 @@ func (s *server) handleImport(w http.ResponseWriter, r *http.Request) {
 	}
 	if s.gameSavePath == "" {
 		http.Error(w, "game save path not set", http.StatusBadRequest)
+		return
+	}
+	if gameRunning.Load() {
+		http.Error(w, "cannot import while Cyberpunk is running", http.StatusConflict)
 		return
 	}
 	var body struct {
