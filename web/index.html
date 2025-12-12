@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberSaver</title>
+  <style>
+    :root {
+      --bg: #0e1117;
+      --panel: #151a21;
+      --accent: #00ffc8;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #ff6b6b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
+      background: linear-gradient(145deg, #0b0f14, #0f1724);
+      color: var(--text);
+    }
+    header {
+      padding: 16px 22px;
+      background: #0b0f14;
+      border-bottom: 1px solid #1f2630;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    h1 { margin: 0; font-size: 20px; letter-spacing: 0.5px; }
+    .accent { color: var(--accent); }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: calc(100vh - 64px);
+    }
+    aside {
+      background: #0f1420;
+      border-right: 1px solid #1f2630;
+      padding: 16px;
+    }
+    main { padding: 16px 18px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid #1f2630;
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    }
+    .profiles { display: flex; flex-direction: column; gap: 10px; }
+    .profile-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .profile {
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid #1f2630;
+      background: #111827;
+      transition: all 0.15s ease;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .profile:hover { border-color: var(--accent); }
+    .profile.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .pill { font-size: 11px; color: #0b0f14; background: var(--accent); padding: 2px 6px; border-radius: 999px; }
+    .inputs { display: flex; gap: 8px; margin-top: 6px; }
+    input, button {
+      border-radius: 8px;
+      border: 1px solid #1f2630;
+      background: #0f1420;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    input { width: 100%; }
+    button { cursor: pointer; transition: all 0.15s ease; }
+    button:hover { border-color: var(--accent); color: var(--accent); }
+    .danger { border-color: var(--danger); color: var(--danger); }
+    .saves-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+    .save {
+      background: #0f1420;
+      border: 1px solid #1f2630;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 320px;
+    }
+    .save img {
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+      background: #0b0f14;
+    }
+    .save-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .save h3 { margin: 0; font-size: 15px; }
+    .muted { color: var(--muted); font-size: 12px; }
+    .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .badge { padding: 2px 8px; border-radius: 999px; font-size: 11px; border: 1px solid #1f2630; background: #0b0f14; }
+    .filters { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .status { margin-top: 8px; color: var(--muted); }
+    .top-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    @media (max-width: 880px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { border-right: none; border-bottom: 1px solid #1f2630; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cyber<span class="accent">Saver</span> - Cyberpunk 2077 Save Profiles</h1>
+    <div id="status" class="muted">Ready</div>
+  </header>
+  <div class="layout">
+    <aside>
+      <div class="card">
+        <div class="profiles">
+          <div>
+            <div class="muted" style="margin-bottom:6px;">Profiles</div>
+            <ul id="profileList" class="profile-list"></ul>
+          </div>
+          <div>
+            <div class="inputs">
+              <input id="newProfile" placeholder="New profile name" />
+              <button onclick="createProfile()">Add</button>
+            </div>
+            <div class="inputs">
+              <button onclick="importSaves()">Import current saves</button>
+              <button onclick="loadProfile()" class="accent">Load selected</button>
+            </div>
+            <div class="inputs">
+              <button onclick="deleteProfile()" class="danger">Delete selected</button>
+              <button onclick="exportProfile()">Export profile</button>
+            </div>
+          </div>
+          <div>
+            <div class="muted">Game save path (current user)</div>
+            <div id="gamePath" style="font-size:13px; word-break: break-all;"></div>
+            <div class="inputs">
+              <button onclick="selectGamePath()">Choose save folder</button>
+            </div>
+            <div id="gamePathStatus" class="muted"></div>
+          </div>
+          <div>
+            <div class="muted">Profile note</div>
+            <textarea id="profileNote" style="width:100%; min-height:80px; resize:vertical; background:#0f1420; color:var(--text); border:1px solid #1f2630; border-radius:8px; padding:8px;"></textarea>
+            <div class="inputs" style="margin-top:6px;">
+              <button onclick="saveNote()">Save note</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <main>
+      <div class="top-actions card">
+        <div class="filters">
+          <label><input type="checkbox" id="showAuto" checked /> Show Autosaves</label>
+          <label><input type="checkbox" id="showManual" checked /> Show Manual</label>
+          <input id="searchBox" placeholder="Search mission/save" style="padding:8px; border-radius:8px; border:1px solid #1f2630; background:#0f1420; color:var(--text);" />
+          <button onclick="refreshSaves()">Refresh</button>
+        </div>
+        <div class="muted" id="activeProfileLabel"></div>
+      </div>
+      <div id="saves" class="saves-grid" style="margin-top:14px;"></div>
+    </main>
+  </div>
+
+  <script>
+    let state = { profiles: [], active: "", selected: "", gamePath: "", pathMissing: false };
+    let refreshing = false;
+    let notesCache = {};
+
+    async function getJSON(url, opts = {}) {
+      const res = await fetch(url, { ...opts, headers: { "Content-Type": "application/json" } });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    }
+
+    function setStatus(msg) { document.getElementById("status").textContent = msg; }
+
+    function renderProfiles() {
+      const ul = document.getElementById("profileList");
+      ul.innerHTML = "";
+      (state.profiles || []).forEach((p) => {
+        const li = document.createElement("li");
+        li.className = "profile" + (p === state.selected ? " active" : "");
+        li.innerHTML = `<span>${p}</span>${p === state.active ? '<span class="pill">Active</span>' : ""}`;
+        li.onclick = () => { state.selected = p; renderProfiles(); loadNote(); refreshSaves(); };
+        ul.appendChild(li);
+      });
+      document.getElementById("activeProfileLabel").textContent = state.active ? `Active: ${state.active}` : "No active profile";
+    }
+
+    async function loadState() {
+      state = await getJSON("/api/state");
+      if (!Array.isArray(state.profiles)) state.profiles = [];
+      state.active = state.active || "";
+      state.selected = state.active || state.profiles[0] || "";
+      document.getElementById("gamePath").textContent = state.gamePath || "(not set)";
+      document.getElementById("gamePathStatus").textContent = state.pathMissing ? "Save folder not found. Click choose to set it." : "";
+      renderProfiles();
+      loadNote();
+      refreshSaves();
+      document.getElementById("showAuto").onchange = refreshSaves;
+      document.getElementById("showManual").onchange = refreshSaves;
+      document.getElementById("searchBox").oninput = refreshSaves;
+    }
+
+    async function loadNote() {
+      if (!state.selected) return;
+      if (notesCache[state.selected] !== undefined) {
+        document.getElementById("profileNote").value = notesCache[state.selected];
+        return;
+      }
+      const res = await getJSON(`/api/profile_note?profile=${encodeURIComponent(state.selected)}`);
+      notesCache[state.selected] = res.note || "";
+      document.getElementById("profileNote").value = notesCache[state.selected];
+    }
+
+    async function saveNote() {
+      if (!state.selected) return;
+      const note = document.getElementById("profileNote").value;
+      await getJSON("/api/profile_note", { method: "POST", body: JSON.stringify({ profile: state.selected, note }) });
+      notesCache[state.selected] = note;
+      setStatus("Note saved");
+    }
+
+    async function createProfile() {
+      const name = document.getElementById("newProfile").value.trim();
+      if (!name) return;
+      await getJSON("/api/profiles", { method: "POST", body: JSON.stringify({ name }) });
+      setStatus(`Created profile ${name}`);
+      document.getElementById("newProfile").value = "";
+      await loadState();
+    }
+
+    async function deleteProfile() {
+      if (!state.selected) return;
+      if (!confirm(`Delete profile ${state.selected}?`)) return;
+      await fetch(`/api/profiles/${encodeURIComponent(state.selected)}`, { method: "DELETE" });
+      setStatus(`Deleted ${state.selected}`);
+      await loadState();
+    }
+
+    async function loadProfile() {
+      if (!state.selected) return;
+      loadNote();
+      if (state.pathMissing) { alert("Set the game save folder first."); return; }
+      await getJSON("/api/load", { method: "POST", body: JSON.stringify({ name: state.selected }) });
+      setStatus(`Loaded ${state.selected}. Junction updated.`);
+      await loadState();
+    }
+
+    async function importSaves() {
+      if (!state.selected) return;
+      loadNote();
+      if (state.pathMissing) { alert("Set the game save folder first."); return; }
+      await getJSON("/api/import", { method: "POST", body: JSON.stringify({ name: state.selected }) });
+      setStatus("Imported current game saves into selected profile");
+      refreshSaves();
+    }
+
+    async function refreshSaves() {
+      if (refreshing) return;
+      refreshing = true;
+      const savesEl = document.getElementById("saves");
+      savesEl.innerHTML = "";
+      if (!state.selected) { refreshing = false; return; }
+      const saves = await getJSON(`/api/saves?profile=${encodeURIComponent(state.selected)}`);
+      if (!Array.isArray(saves)) {
+        setStatus("Failed to read saves list");
+        refreshing = false;
+        return;
+      }
+      const showAuto = document.getElementById("showAuto").checked;
+      const showManual = document.getElementById("showManual").checked;
+      const search = document.getElementById("searchBox").value.trim().toLowerCase();
+      saves.forEach((s) => {
+        if (s.type === "Auto" && !showAuto) return;
+        if (s.type === "Manual" && !showManual) return;
+        const questLabel = s.questTitle || s.quest || s.name || "Quest: unknown";
+        const objective = truncate(s.objective || "", 80);
+        const hay = `${s.name} ${questLabel} ${objective}`.toLowerCase();
+        if (search && !hay.includes(search)) return;
+        const card = document.createElement("div");
+        card.className = "save";
+        const imgSrc = s.screenshot ? `/files/${state.selected}/${s.screenshot}` : "";
+        card.innerHTML = `
+          ${imgSrc ? `<img src="${imgSrc}" alt="screenshot" />` : `<div style="height:170px;display:flex;align-items:center;justify-content:center;" class="muted">No screenshot</div>`}
+          <div class="save-body">
+            <h3>${questLabel}</h3>
+            <div class="muted">${s.name} · ${s.modified}</div>
+            <div class="muted">${objective || "Quest detail unavailable"}</div>
+            <div class="row">
+              <span class="badge">${s.type}</span>
+              ${s.level ? `<span class="badge">${s.level}</span>` : ""}
+              ${s.playtime ? `<span class="badge">${s.playtime}</span>` : ""}
+              <button onclick="copySave('${s.name}')" class="">Copy to...</button>
+              <button class="danger" onclick="deleteSave('${s.name}')">Delete</button>
+            </div>
+          </div>
+        `;
+        savesEl.appendChild(card);
+      });
+      setStatus(`Showing ${savesEl.children.length} saves`);
+      refreshing = false;
+    }
+
+    async function deleteSave(name) {
+      if (!confirm(`Delete save ${name}?`)) return;
+      await getJSON("/api/delete_save", { method: "POST", body: JSON.stringify({ profile: state.selected, name }) });
+      setStatus(`Deleted ${name}`);
+      refreshSaves();
+    }
+
+    async function copySave(name) {
+      const target = prompt("Copy to which profile?", state.selected);
+      if (!target || !target.trim()) return;
+      await getJSON("/api/copy_save", { method: "POST", body: JSON.stringify({ profile: state.selected, name, target }) });
+      setStatus(`Copied ${name} to ${target}`);
+    }
+
+    async function selectGamePath() {
+      try {
+        const res = await getJSON("/api/select_path", { method: "POST" });
+        setStatus(`Using ${res.path}`);
+        await loadState();
+      } catch (err) {
+        setStatus("Folder selection cancelled or failed");
+      }
+    }
+
+    function exportProfile() {
+      if (!state.selected) return;
+      window.location = `/api/export_profile?profile=${encodeURIComponent(state.selected)}`;
+    }
+
+    function truncate(text, maxLen) {
+      if (!text) return "";
+      if (text.length <= maxLen) return text;
+      return text.slice(0, maxLen - 1) + "…";
+    }
+
+    loadState().catch((err) => { console.error(err); setStatus("Failed to load: " + err.message); });
+    setInterval(() => { refreshSaves(); }, 8000);
+  </script>
+</body>
+</html>
