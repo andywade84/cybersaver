@@ -20,6 +20,8 @@ Save smarter in Night City. CyberSaver is a Windows tray app that keeps multiple
 ## Build
 ```powershell
 cd src
+# (one-time) install icon generator: go install github.com/akavel/rsrc@latest
+go generate
 New-Item -ItemType Directory -Force ../build | Out-Null
 go build -o ../build/cybersaver.exe
 ```

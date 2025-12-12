@@ -5,3 +5,4 @@
 profiles/
 build/
 *.exe
+*.syso

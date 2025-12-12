@@ -10,6 +10,8 @@ import (
 	"github.com/getlantern/systray"
 )
 
+//go:generate rsrc -ico CyberSaver.ico -o CyberSaver.syso
+
 const shutdownTimeout = 3 * time.Second
 
 func main() {
