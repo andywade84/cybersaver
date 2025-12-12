@@ -8,3 +8,4 @@ profiles/
 build/
 *.exe
 *.syso
+config.json
