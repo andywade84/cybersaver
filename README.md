@@ -4,8 +4,10 @@
 
 Save smarter in Night City. CyberSaver is a Windows tray app that keeps multiple Cyberpunk 2077 save profiles safe, organized, and one click away — without touching your game settings.
 
+[⬇ Download latest release](https://github.com/andywade84/CyberSaver/releases/latest)
+
 ## Why CyberSaver
-- **Profile switching without fuss**: Uses junctions so the game always sees the active profile’s saves.
+- **Profile switching without fuss**: Junction-based, so the game always sees only the active profile’s saves.
 - **Zero surprises**: First-run backup, warnings before replacing existing junctions, and a red tray icon that blocks switching while Cyberpunk is running.
 - **Know your saves**: Screenshots, quest title/objective lookup, playtime, level, filters (auto/manual), and search by mission/save.
 - **Move and share easily**: Import current saves into a profile, copy a save to another profile, export a profile as ZIP, add per-profile notes.
@@ -17,13 +19,15 @@ Save smarter in Night City. CyberSaver is a Windows tray app that keeps multiple
 
 ## Build
 ```powershell
-go build
+cd src
+New-Item -ItemType Directory -Force ../build | Out-Null
+go build -o ../build/cybersaver.exe
 ```
-Produces `cybersaver.exe`. UI and quest data are embedded.
+Produces `build/cybersaver.exe`. UI and quest data are embedded.
 
 ## Run
 ```powershell
-.\cybersaver.exe
+.\build\cybersaver.exe
 ```
 - First run: shows safety prompt, backs up the current save folder, and warns if an existing junction points elsewhere.
 - Opens `http://localhost:8787` in your browser. The app stays in the system tray; reopen from “Open CyberSaver”.
