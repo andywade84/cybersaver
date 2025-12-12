@@ -24,12 +24,19 @@ func main() {
 		profilesDir:    defaultProfilesDir(),
 	}
 
+	cfg := requirePort(loadConfig())
+	if cfg.GameSavePath != "" {
+		s.gameSavePath = cfg.GameSavePath
+		s.gamePathExists = dirExists(cfg.GameSavePath)
+	}
+	if cfg.ProfilesDir != "" {
+		s.profilesDir = cfg.ProfilesDir
+	}
 	if err := os.MkdirAll(s.profilesDir, 0o755); err != nil {
 		log.Fatalf("failed to create profiles dir: %v", err)
 	}
 
-	cfg := requirePort(loadConfig())
-
+	cfg = runSetupWizard(cfg, s)
 	ensureProtection(s)
 
 	mux := http.NewServeMux()

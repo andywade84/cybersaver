@@ -14,7 +14,7 @@ Save smarter in Night City. CyberSaver is a Windows tray app that keeps multiple
 - **Always on, never in the way**: Lightweight local web UI with tray controls (Open / Exit). Close the browser; reopen from the tray anytime.
 
 ## Requirements
-- Windows; Cyberpunk 2077 saves in the default location (`%USERPROFILE%\Saved Games\CD Projekt Red\Cyberpunk 2077`) or a folder you select.
+- Windows: Cyberpunk 2077 saves in the default location (`%USERPROFILE%\Saved Games\CD Projekt Red\Cyberpunk 2077`) or a folder you select.
 - Go 1.22+ to build from source.
 
 ## Build
@@ -32,11 +32,18 @@ Produces `build/cybersaver.exe`. UI and quest data are embedded.
 .\build\cybersaver.exe
 ```
 - First run: shows safety prompt, backs up the current save folder, and warns if an existing junction points elsewhere.
-- Opens `http://localhost:8787` in your browser. The app stays in the system tray; reopen from “Open CyberSaver”.
+- Opens `http://localhost:8787` in your browser (port can be configured during startup). The app stays in the system tray; reopen from “Open CyberSaver”.
 - Tray icon turns **red** and switches/imports are blocked while Cyberpunk is running to protect your saves.
 
 ## Notes
-- Profiles live under `profiles/` next to the executable. Loading a profile replaces the game save folder with a junction to that profile.
+- Profiles live under `profiles/` next to the executable, or the location you set during first run. Loading a profile replaces the game save folder with a junction to that profile.
 - The UI auto-refreshes saves every few seconds; use filters/search to narrow results.
 - **Cloud saves:** Steam/GoG can drop cloud saves into the game folder on launch. To avoid surprise new folders or old saves resurfacing, disable cloud saves for Cyberpunk 2077 in your launcher.
-- **Backups:** Always keep an off-machine copy of profiles (e.g., OneDrive/Dropbox/Google Drive). Future enhancements could include optional cloud sync (OAuth to your provider) or paid hosted storage, but today you should handle cloud backups yourself.
+- **Backups:** Always keep an off-machine copy of profiles (e.g., OneDrive/Dropbox/Google Drive).
+- **Restore / uninstall:** Close Cyberpunk and exit CyberSaver (tray → Exit). Remove the junction and copy your active profile back to the original save folder:  
+  1) Find the game save path (default `%USERPROFILE%\Saved Games\CD Projekt Red\Cyberpunk 2077`).  
+  2) Check the junction target (PowerShell): `Get-Item "<game-save-path>" | Select-Object -Expand Target` (that is your active profile folder).  
+  3) Remove the junction: `cmd /C rmdir "<game-save-path>"`.  
+  4) Copy the profile back: `Copy-Item "<profile-folder>\\*" "<game-save-path>\\" -Recurse`.  
+  After that, the game uses the normal folder again.
+- **Trust & verification:** If you prefer not to run the downloaded EXE, build from source (`src/` → `build/`) and compare hashes to the release asset. The app only serves a UI on localhost and does not phone home.
