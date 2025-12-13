@@ -176,6 +176,7 @@
     let state = { profiles: [], active: "", selected: "", gamePath: "", pathMissing: false };
     let refreshing = false;
     let notesCache = {};
+    let lastRenderKey = "";
 
     async function getJSON(url, opts = {}) {
       const res = await fetch(url, { ...opts, headers: { "Content-Type": "application/json" } });
@@ -208,9 +209,9 @@
       renderProfiles();
       loadNote();
       refreshSaves();
-      document.getElementById("showAuto").onchange = refreshSaves;
-      document.getElementById("showManual").onchange = refreshSaves;
-      document.getElementById("searchBox").oninput = refreshSaves;
+      document.getElementById("showAuto").onchange = () => { lastRenderKey = ""; refreshSaves(); };
+      document.getElementById("showManual").onchange = () => { lastRenderKey = ""; refreshSaves(); };
+      document.getElementById("searchBox").oninput = () => { lastRenderKey = ""; refreshSaves(); };
     }
 
     async function loadNote() {
@@ -271,7 +272,6 @@
       if (refreshing) return;
       refreshing = true;
       const savesEl = document.getElementById("saves");
-      savesEl.innerHTML = "";
       if (!state.selected) { refreshing = false; return; }
       const saves = await getJSON(`/api/saves?profile=${encodeURIComponent(state.selected)}`);
       if (!Array.isArray(saves)) {
@@ -282,6 +282,7 @@
       const showAuto = document.getElementById("showAuto").checked;
       const showManual = document.getElementById("showManual").checked;
       const search = document.getElementById("searchBox").value.trim().toLowerCase();
+      const toRender = [];
       saves.forEach((s) => {
         if (s.type === "Auto" && !showAuto) return;
         if (s.type === "Manual" && !showManual) return;
@@ -289,15 +290,27 @@
         const objective = truncate(s.objective || "", 80);
         const hay = `${s.name} ${questLabel} ${objective}`.toLowerCase();
         if (search && !hay.includes(search)) return;
+        toRender.push({ ...s, questLabel, objective });
+      });
+
+      const key = JSON.stringify(toRender.map(s => [s.name, s.modified, s.questLabel, s.objective, s.type, s.level, s.playtime]));
+      if (key === lastRenderKey) {
+        refreshing = false;
+        return;
+      }
+      lastRenderKey = key;
+      savesEl.innerHTML = "";
+
+      toRender.forEach((s) => {
         const card = document.createElement("div");
         card.className = "save";
         const imgSrc = s.screenshot ? `/files/${state.selected}/${s.screenshot}` : "";
         card.innerHTML = `
           ${imgSrc ? `<img src="${imgSrc}" alt="screenshot" />` : `<div style="height:170px;display:flex;align-items:center;justify-content:center;" class="muted">No screenshot</div>`}
           <div class="save-body">
-            <h3>${questLabel}</h3>
+            <h3>${s.questLabel}</h3>
             <div class="muted">${s.name} · ${s.modified}</div>
-            <div class="muted">${objective || "Quest detail unavailable"}</div>
+            <div class="muted">${s.objective || "Quest detail unavailable"}</div>
             <div class="row">
               <span class="badge">${s.type}</span>
               ${s.level ? `<span class="badge">${s.level}</span>` : ""}

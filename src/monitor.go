@@ -4,6 +4,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
@@ -11,6 +12,7 @@ var gameRunning atomic.Bool
 
 func isGameRunning() bool {
 	cmd := exec.Command("tasklist", "/FI", "IMAGENAME eq Cyberpunk2077.exe")
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 	out, err := cmd.Output()
 	if err != nil {
 		return false
